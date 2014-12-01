@@ -1,0 +1,124 @@
+#!/bin/sh /etc/rc.common
+#
+# This file is part of webaid.  webaid is free software: you can
+# redistribute it and/or modify it under the terms of the GNU General Public
+# License as published by the Free Software Foundation, version 2.
+#
+# This program is distributed in the hope that it will be useful, but WITHOUT
+# ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+# FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
+# details.
+#
+# You should have received a copy of the GNU General Public License along with
+# this program; if not, write to the Free Software Foundation, Inc., 51
+# Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+#
+# Copyright (C) Jason Han han_min(at)hotmail.com
+#
+
+START=80
+STOP=80
+
+SERVICE_USE_PID=1
+
+export PATH=`dirname $0`/../bin:`dirname $0`/../script:$PATH
+
+BASE_DIR=/home/jason/WebstormProjects/adblock/server
+CONF_FILE=$BASE_DIR/etc/config
+CONF_PARTIAL=$BASE_DIR/etc/privoxy.conf
+
+start() {
+	eval `from_conf`
+	if [ "a"$enable = "a1" ]; then
+		gen_conf > /tmp/webaid.conf
+		service_start $BASE_DIR/bin/privoxy --pidfile /var/run/privoxy.pid \
+					/tmp/webaid.conf
+
+		if [ "a"$trans = "a1" ]; then
+			del_fw 
+			add_fw
+		fi
+	fi
+}
+
+stop() {
+	service_stop $BASE_DIR/bin/privoxy > /dev/null 2>&1
+	del_fw > /dev/null 2>&1
+}
+
+get_ipaddr() {
+	ifconfig br-lan 2>/dev/null |grep -o 'inet addr:[^ ]*' |cut -f2 -d:
+}
+
+gen_conf() {
+	eval `from_conf`
+	echo "confdir /opt/app/webaid/etc"
+	echo "logdir /var/log"
+
+	if [ "a"$videoad = "a1" ]; then
+		if [ "a"$sohu = "a1" ]; then
+			echo "filterfile videoad/sohu.filter"
+		fi
+		if [ "a"$youku = "a1" ]; then
+			echo "filterfile videoad/youku.filter"
+		fi
+		if [ "a"$iqiyi = "a1" ]; then
+			echo "filterfile videoad/iqiyi.filter"
+		fi
+		if [ "a"$letv = "a1" ]; then
+			echo "filterfile videoad/letv.filter"
+		fi
+		if [ "a"$ku6 = "a1" ]; then
+			echo "filterfile videoad/ku6.filter"
+		fi
+	fi
+	
+	if [ "a"$urlad = "a1" ]; then
+		echo "actionsfile block.action"
+		echo "actionsfile unblock.action"
+		echo "actionsfile blacklist.action"
+		echo "actionsfile whitelist.action"
+	fi
+
+	if [ "a"$videoad = "a1" ]; then
+		if [ "a"$sohu = "a1" ]; then
+			echo "actionsfile videoad/sohu.action"
+		fi
+		if [ "a"$youku = "a1" ]; then
+			echo "actionsfile videoad/youku.action"
+		fi
+		if [ "a"$iqiyi = "a1" ]; then
+			echo "actionsfile videoad/iqiyi.action"
+		fi
+		if [ "a"$letv = "a1" ]; then
+			echo "actionsfile videoad/letv.action"
+		fi
+		if [ "a"$ku6 = "a1" ]; then
+			echo "actionsfile videoad/ku6.action"
+		fi
+	fi
+	echo "listen-address 0.0.0.0:"$port
+	cat $CONF_PARTIAL
+}
+
+from_conf() {                                                                   
+        cat $CONF_FILE |xargs -n 1 echo "local "   
+}     
+
+add_fw() {
+	eval `from_conf`
+        iptables -t nat -N WEBAID
+        iptables -t nat -A WEBAID -d `get_ipaddr`/32 -j RETURN
+        iptables -t nat -A WEBAID -p tcp --dport 80 -j REDIRECT --to-ports $port
+        iptables -t nat -A PREROUTING -p tcp -j WEBAID
+}
+
+del_fw() {
+        local rule_num=`iptables -t nat -L PREROUTING --line-number |grep 'WEBAID' |cut -f1 -d' '`
+        if [ "a"$rule_num != "a" ]; then
+                iptables -t nat -D PREROUTING $rule_num
+        fi
+        iptables -t nat -F WEBAID > /dev/null 2>&1
+        iptables -t nat -X WEBAID > /dev/null 2>&1
+}
+

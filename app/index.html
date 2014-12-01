@@ -1,0 +1,595 @@
+<!doctype html>
+<html class="no-js">
+<head>
+  <meta charset="utf-8">
+  <title></title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width">
+  <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
+  <!-- build:css(.) styles/vendor.css -->
+  <!-- bower:css -->
+  <link rel="stylesheet" href="bower_components/angular-dialog-service/dist/dialogs.min.css" />
+  <!-- endbower -->
+  <!-- endbuild -->
+  <!-- build:css(.tmp) styles/main.css -->
+  <link rel="stylesheet" href="styles/main.css">
+  <!-- endbuild -->
+</head>
+<body ng-app="adblockApp">
+<script>
+  function backHome() {
+    var homePath = window.location.pathname.replace(/^(.*admin\/xcloud).*/, "$1");
+    window.location = homePath;
+  }
+</script>
+
+<!--[if lt IE 7]>
+<p class="browsehappy">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade
+  your browser</a> to improve your experience.</p>
+<![endif]-->
+
+<!-- Add your site or application content here -->
+<div class="xnav">
+  <div class="nav_head common">
+    <a href="http://r.xcloud.cc" target="_blank" class="logo"></a>
+  </div>
+</div>
+
+<div class="navigation">
+  <div class="navigation_title">
+    <a href="#" onclick="backHome()">主页</a>&gt;&gt;小白上网助手
+  </div>
+  <a class="app_return" href="#" onclick="backHome()">
+    <span class="app_return_img"></span>&nbsp;返回
+  </a>
+</div>
+
+<div class="container app_content">
+<div class="xcloud_row clearfix">
+<div class="col-md-12 column">
+<div class="page-header">
+  <h2>
+    小白上网助手
+    <small> 如意云 定制版 (ver:0.1.0)</small>
+  </h2>
+</div>
+<div>
+  <p>
+    智能内容过滤系统，<strong>内建超强过滤引擎，兼容ABP和ABP变种规则</strong>。支持：<em>网址过滤、视频无等待优化、规则在线更新、自定义过滤条件（黑名单/白名单）。</em>
+  </p>
+
+  <p>
+    <strong>免责声明</strong>：在使用本软件（小白上网助手）前，请您务必仔细阅读并透彻理解本声明。您可以选择不使用本软件，但如果您使用本软件，您的使用行为将被视为对本声明全部内容的认可。
+  <ul>
+    <li>
+      <small>本软件为免费软件，软件作者既不会以任何形式向使用者收取任何费用，也不会以此软件谋取任何利益；</small>
+    </li>
+    <li>
+      <small>本软件中集成的内容过滤引擎和内容过滤规则均来自互联网，软件作者对来自互联网内容的合法性、准确性、适用性、安全性等概不负责，也无法负责；</small>
+    </li>
+    <li>
+      <small>
+        任何单位或者个人在使用本软件前，务必确保自身具备完全民事行为能力，且对被过滤的内容具备自主选择的权利。对于使用本软件造成的侵犯事件，及因该等事件所造成的损害后果，软件作者概不负责，亦不会也不能承担任何法律责任，而应由使用者本人承担；
+      </small>
+    </li>
+    <li>
+      <small>
+        任何单位或个人如认为本软件可能涉嫌侵害其合法著作权，应按照《信息网络传播权保护条例》的规定，以书面的形式及时向软件作者反应，并提供相应身份证明、权属证明及详细的侵权情况证明，软件作者在收到上述文件后，会尽快修正软件中的被控侵权的部分；
+      </small>
+    </li>
+  </ul>
+  </p>
+  <br>
+</div>
+<div>
+<form class="form-horizontal" role="form">
+<legend>功能设置</legend>
+<tabset>
+<tab heading="网址过滤" ng-controller="UrlAdRuleCtrl">
+  <br>
+
+  <div class="checkbox checkbox-primary">
+    <input type="checkbox" id="enableUrlAdBlock" ng-model="globalSetting.urlad" ng-true-value="1"
+           ng-false-value="0"
+           ng-checked="globalSetting.urlad == 1"/> <label
+      for="enableUrlAdBlock">开启网址过滤功能</label>
+  </div>
+  <br>
+  <table st-table="displayedRules" st-safe-src="rules" class="table table-hover table-striped">
+    <thead>
+    <tr>
+      <th class="vert-align text-center" ng-repeat="tbHeader in tbHeaders" ng-bind="helper.getColumnString(tbHeader)"
+          st-sort="{{ tbHeader }}">
+      </th>
+      <th class="text-center">
+        操作
+      </th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr ng-repeat="rule in displayedRules | filter: typesFilter track by $index ">
+      <td class="vert-align text-center">
+        <div class="checkbox checkbox-success checkbox-circle" style="padding-left: 25px;">
+          <input type="checkbox" id="urlRuleId{{ rule.id }}" ng-model="rule.enabled" ng-click="flip(rule)"
+                 ng-disabled="globalSetting.urlad != 1"/><label
+            for="urlRuleId{{ rule.id }}" style="padding-left: 0px;">&nbsp;</label>
+        </div>
+      </td>
+      <td class="vert-align text-center" ng-bind="rule.name | base64Decode">
+      </td>
+      <td class="vert-align text-center" ng-bind="helper.getTypeString(rule.type)">
+      </td>
+      <td class="vert-align text-center" ng-bind="helper.getOnlineFlagString(rule.online)">
+      </td>
+      <td class="vert-align text-center" ng-bind="rule.count | number">
+      </td>
+      <td class="vert-align text-center" ng-bind="rule.date | date">
+      </td>
+      <td class="vert-align text-center">
+        <div class="btn-group">
+          <button class="btn btn-icon-edit" type="button" popover="编辑" popover-trigger="mouseenter"
+                  popover-append-to-body="true" ng-click="openEditorDialog(rule)"><em
+              class="fa fa-edit"></em></button>
+          <button class="btn btn-icon-refresh" type="button" popover="更新" popover-trigger="mouseenter"
+                  popover-append-to-body="true" ng-click="refresh(rule)" ng-disabled="!rule.online"><em
+              class="fa fa-refresh"></em></button>
+          <button class="btn btn-icon-del" type="button" popover="删除" popover-trigger="mouseenter"
+                  popover-append-to-body="true" ng-click="deleteRuleDialog(rule)"><em
+              class="fa fa-trash-o"></em></button>
+        </div>
+      </td>
+    </tr>
+    </tbody>
+  </table>
+  <button class="btn btn-primary" type="button" ng-click="openEditorDialog()"><em
+      class="fa fa-plus"></em> 添加
+  </button>
+  <br>
+</tab>
+<tab heading="帮助">
+  <br>
+  <h4>
+    ABP过滤规则语法说明
+  </h4>
+  <ul>
+    <li>
+      "!" 为行注释符，注释行以该符号起始作为一行注释语义，用于规则描述
+    </li>
+    <li>
+      "*" 为字符通配符，能够匹配0长度或任意长度的字符串，该通配符不能与正则语法混用。
+    </li>
+    <li>
+      "^" 为分隔符，可以是除了字母、数字或者 _ - . % 之外的任何字符。
+    </li>
+    <li>
+      "|" 为管线符号，来表示地址的最前端或最末端
+    </li>
+    <li>
+      "||" 为子域通配符，方便匹配主域名下的所有子域。
+    </li>
+  </ul>
+  <a class="btn" href="https://adblockplus.org/zh_CN/filters">ABP规则请参考 »</a>
+  <br>
+  <h4>
+    黑名单白名单语法说明
+  </h4>
+  <ul>
+    <li>
+      <em>.example.com</em> 匹配任何以.example.com结尾的地址，如www.example.com, example.com, abc.xyz.example.com
+    </li>
+    <li>
+      <em>ad.</em> 匹配任何ad.开头的地址, 如ad.baidu.com, ad.google.com
+    </li>
+    <li>
+      <em>.baidu.</em> 匹配任何包含baidu的网址,如www.baidu.com,ditu.baidu.cn
+    </li>
+    <li>
+      <em>ad*.baidu.com</em> "*"为字符通配符，能够匹配0长度或任意长度的字符串，如ads.baidu.com, ad1234.baidu.com
+    </li>
+    <li>
+      <em>.baidu.c*</em> 匹配foo.baidu.com, bar.baidu.cn,
+    </li>
+    <li>
+      <em>www.baidu.c?</em> "?"为字符通配符，能够匹配任意一个字符，如www.baidu.cn, www.baidu.cc, www.baidu.cy
+    </li>
+    <li>
+      规则中的域名也可以带有路径，路径部分的语法为<a href="http://baike.baidu.com/view/94238.htm">正则表达式</a>，如www.baidu.cn/ad.*/.*\.jpg$
+    </li>
+  </ul>
+  <a class="btn" href="http://www.privoxy.org/user-manual/actions-file.html#AF-PATTERNS">详细规则说明（英文） »</a>
+  <br>
+  <h4>
+    联系作者
+  </h4>
+
+  <p>QQ:1957736379</p>
+</tab>
+</tabset>
+<br>
+</form>
+</div>
+<div ng-controller="SettingCtrl">
+  <form class="form-horizontal" role="form">
+    <legend>参数设置</legend>
+    <div class="form-group">
+      <label class="col-sm-4 control-label">启用上网助手</label>
+
+      <div class="col-sm-6">
+        <div class="checkbox checkbox-primary">
+          <input type="checkbox" id="enable" ng-model="globalSetting.enable" ng-true-value="1" ng-false-value="0"
+                 ng-checked="globalSetting.enable === 1"/>
+          <label for="enable">启用本助手后，您的路由器将具备<strong>广告过滤</strong>功能。</label>
+        </div>
+      </div>
+      <div class="col-sm-2"></div>
+    </div>
+    <div class="form-group">
+      <label class="col-sm-4 control-label">代理服务端口</label>
+
+      <div class="col-sm-6">
+        <input type="number" class="form-control" placeholder="8118" ng-model="globalSetting.port"/>
+      </div>
+      <div class="col-sm-2"></div>
+    </div>
+    <div class="form-group">
+      <label class="col-sm-4 control-label">开启穿透模式</label>
+
+      <div class="col-sm-6">
+        <div class="checkbox checkbox-primary">
+          <input type="checkbox" id="enableTransport" ng-model="globalSetting.trans" ng-true-value="1"
+                 ng-false-value="0" ng-checked="globalSetting.trans === 1"/>
+          <label for="enableTransport">穿透模式开启后，客户端可以无须设置代理服务器，直接进行广告过滤。</label>
+          <br><br>
+          <strong>注意：</strong>穿透模式对<strong>HTTPS</strong>加密协议无效，若要使用<strong>HTTPS</strong>协议，请在客户端进行代理服务器设置，并将本机的地址
+          <span class="label label-success" ng-bind="host"></span>
+          和代理服务端口
+          <span class="label label-success" ng-bind="globalSetting.port"></span>
+          作为HTTP代理服务器的地址和端口。
+        </div>
+      </div>
+      <div class="col-sm-2"></div>
+    </div>
+    <div class="form-group">
+      <div class="col-sm-12 pull-right">
+        <div class="pull-right">
+          <button type="button" class="btn btn-primary" ng-click="apply()"><em class="fa fa-check"></em> 应用</button>
+          <button type="button" class="btn btn-success" ng-click="save()"><em class="fa fa-save"></em> 保存</button>
+          <button type="button" class="btn btn-default" ng-click="reset()"><em class="fa fa-remove"></em> 重置</button>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+</div>
+</div>
+</div>
+
+<!-- build:js(.) scripts/oldieshim.js -->
+<!--[if lt IE 9]>
+<script src="bower_components/es5-shim/es5-shim.js"></script>
+<script src="bower_components/json3/lib/json3.js"></script>
+<![endif]-->
+<!-- endbuild -->
+
+<!-- build:js(.) scripts/vendor.js -->
+<!-- bower:js -->
+<script src="bower_components/jquery/dist/jquery.js"></script>
+<script src="bower_components/angular/angular.js"></script>
+<script src="bower_components/angular-bootstrap/ui-bootstrap-tpls.js"></script>
+<script src="bower_components/bootstrap-sass-official/assets/javascripts/bootstrap/affix.js"></script>
+<script src="bower_components/bootstrap-sass-official/assets/javascripts/bootstrap/alert.js"></script>
+<script src="bower_components/bootstrap-sass-official/assets/javascripts/bootstrap/button.js"></script>
+<script src="bower_components/bootstrap-sass-official/assets/javascripts/bootstrap/carousel.js"></script>
+<script src="bower_components/bootstrap-sass-official/assets/javascripts/bootstrap/collapse.js"></script>
+<script src="bower_components/bootstrap-sass-official/assets/javascripts/bootstrap/dropdown.js"></script>
+<script src="bower_components/bootstrap-sass-official/assets/javascripts/bootstrap/tab.js"></script>
+<script src="bower_components/bootstrap-sass-official/assets/javascripts/bootstrap/transition.js"></script>
+<script src="bower_components/bootstrap-sass-official/assets/javascripts/bootstrap/scrollspy.js"></script>
+<script src="bower_components/bootstrap-sass-official/assets/javascripts/bootstrap/modal.js"></script>
+<script src="bower_components/bootstrap-sass-official/assets/javascripts/bootstrap/tooltip.js"></script>
+<script src="bower_components/bootstrap-sass-official/assets/javascripts/bootstrap/popover.js"></script>
+<script src="bower_components/angular-sanitize/angular-sanitize.js"></script>
+<script src="bower_components/angular-translate/angular-translate.js"></script>
+<script src="bower_components/angular-dialog-service/dist/dialogs.min.js"></script>
+<script src="bower_components/angular-dialog-service/dist/dialogs-default-translations.min.js"></script>
+<script src="bower_components/angular-bootstrap-show-errors/src/showErrors.js"></script>
+<script src="bower_components/angular-animate/angular-animate.js"></script>
+<script src="bower_components/angular-smart-table/dist/smart-table.min.js"></script>
+<script src="bower_components/spin.js/spin.js"></script>
+<script src="bower_components/angular-spinner/angular-spinner.js"></script>
+<script src="bower_components/angular-utf8-base64/angular-utf8-base64.min.js"></script>
+<!-- endbower -->
+<!-- endbuild -->
+
+<!-- build:js({.tmp,app}) scripts/scripts.js -->
+<script src="scripts/app.js"></script>
+<script src="scripts/controllers/settingCtrl.js"></script>
+<script src="scripts/controllers/spinnerCtrl.js"></script>
+<script src="scripts/controllers/urlAdRuleCtrl.js"></script>
+<script src="scripts/services/settingService.js"></script>
+<script src="scripts/services/dictService.js"></script>
+<script src="scripts/services/ruleService.js"></script>
+<script src="scripts/services/spinnerService.js"></script>
+<script src="scripts/services/xCloudComCmdRpc.js"></script>
+<!-- endbuild -->
+<div ng-controller="SpinnerCtrl">
+  <div class="spinner-backdrop modal-backdrop fade in" ng-show="active"></div>
+  <div class="spinner-container" us-spinner="options" ng-show="active"></div>
+</div>
+
+<script type="text/ng-template" id="removeConfirm.html">
+  <div class="modal-header xcloud-modal-fix">
+    <button type="button" class="close" ng-click="no()">&times;</button>
+    <!--<h4 class="modal-title">请确认</h4>-->
+  </div>
+  <div class="modal-body xcloud-modal-fix">是否删除 <strong>{{ name|base64Decode }}</strong> ？</div>
+  <div class="modal-footer xcloud-modal-fix">
+    <button type="button" class="btn btn-primary" ng-click="yes()"><em class="fa fa-check"></em> 确定</button>
+    <button type="button" class="btn btn-default" ng-click="no()"><em class="fa fa-remove"></em> 取消</button>
+  </div>
+</script>
+
+<script type="text/ng-template" id="urlAdRuleEditor.html">
+  <div class="modal-header">
+    <button type="button" class="close" ng-click="no()">&times;</button>
+    <h4 class="modal-title">网页去广告规则设置</h4>
+  </div>
+  <div class="modal-body">
+    <form name="urlBlockRuleForm" class="form-horizontal" role="form" novalidate>
+      <div class="form-group" show-errors>
+        <label class="col-sm-3 control-label">{{ helper.getColumnString('name') }}：</label>
+
+        <div class="col-sm-6">
+          <input type="text" class="form-control" name="ruleName" ng-model="_name" required/>
+        </div>
+        <div class="col-sm-3">
+          <span class="help-block">{{ helper.getColumnHint('name') }}</span>
+        </div>
+      </div>
+      <div class="form-group" show-errors>
+        <label class="col-sm-3 control-label">{{ helper.getColumnString('type') }}：</label>
+
+        <div class="col-sm-6">
+          <div class="xcloud-select">
+            <select class="form-control" name="ruleType" ng-model="rule.type"
+                    ng-options="type.key as type.label for type in ruleTypes | filter:typesFilter"
+                    required>
+            </select>
+          </div>
+        </div>
+        <div class="col-sm-3">
+          <span class="help-block">{{ helper.getColumnHint('type') }}</span>
+        </div>
+      </div>
+      <div class="form-group" show-errors>
+        <label class="col-sm-3 control-label">{{ helper.getColumnString('online') }}：</label>
+
+        <div class="col-sm-6">
+          <div class="xcloud-select">
+            <select class="form-control" name="ruleOnlineFlag" ng-model="rule.online"
+                    ng-options="flag.key as flag.label for flag in onlineFlags" required>
+            </select>
+          </div>
+        </div>
+        <div class="col-sm-3">
+          <span class="help-block">{{ helper.getColumnHint('online') }}</span>
+        </div>
+      </div>
+      <div class="form-group" ng-switch on="rule.online">
+        <div class="col-sm-offset-3 col-sm-6">
+          <input class="form-control change-rule-type" name="ruleUrl" ng-model="$parent.rule.url"
+                 ng-switch-when="true"/>
+          <textarea class="form-control change-rule-type" name="ruleText" rows="6" ng-model="$parent.text"
+                    ng-switch-when="false"/>
+        </div>
+        <div class="col-sm-3">
+        </div>
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-primary" ng-click="yes()"><em class="fa fa-check"></em> 确定</button>
+    <button class="btn btn-default" ng-click="no()"><em class="fa fa-remove"></em> 取消</button>
+  </div>
+</script>
+
+
+<script type="text/ng-template" id="proxyRuleEditor.html">
+  <div class="modal-header">
+    <button type="button" class="close" ng-click="no()">&times;</button>
+    <h4 class="modal-title">代理服务器设置</h4>
+  </div>
+  <div class="modal-body">
+    <form name="proxyRuleForm" class="form-horizontal" role="form" novalidate>
+      <div class="form-group" show-errors>
+        <label class="col-sm-3 control-label">{{ helper.getProxyColumnString('name') }}</label>
+
+        <div class="col-sm-6">
+          <input type="text" class="form-control" name="proxyName" ng-model="rule.name"
+                 placeholder="{{ helper.getProxyColumnHint('name') }}" required/>
+        </div>
+        <div class="col-sm-3">
+          <span class="help-block">{{ helper.getProxyColumnHint('name') }}</span>
+        </div>
+      </div>
+      <div class="form-group" show-errors>
+        <label class="col-sm-3 control-label">{{ helper.getProxyColumnString('server') }}</label>
+
+        <div class="col-sm-6">
+          <input type="text" class="form-control" name="server" ng-model="rule.server" required/>
+        </div>
+        <div class="col-sm-3">
+          <span class="help-block">{{ helper.getProxyColumnHint('server') }}</span>
+        </div>
+      </div>
+      <div class="form-group" show-errors>
+        <label class="col-sm-3 control-label">{{ helper.getProxyColumnString('serverPort') }}</label>
+
+        <div class="col-sm-6">
+          <input type="number" class="form-control" name="serverPort" ng-model="rule.serverPort" required/>
+        </div>
+        <div class="col-sm-3">
+          <span class="help-block">{{ helper.getProxyColumnHint('serverPort') }}</span>
+        </div>
+      </div>
+      <div class="form-group" show-errors>
+        <label class="col-sm-3 control-label">{{ helper.getProxyColumnString('localPort') }}</label>
+
+        <div class="col-sm-6">
+          <input type="number" class="form-control" name="localPort" placeholder="1080" ng-model="rule.localPort"
+                 required/>
+        </div>
+        <div class="col-sm-3">
+          <span class="help-block">{{ helper.getProxyColumnHint('localPort') }}</span>
+        </div>
+      </div>
+      <div class="form-group" show-errors>
+        <label class="col-sm-3 control-label">{{ helper.getProxyColumnString('type') }}</label>
+
+        <div class="col-sm-6">
+          <select class="form-control" name="proxyType" ng-model="rule.type"
+                  ng-options="type.key as type.label for type in ruleTypes | filter:typesFilter"
+                  required>
+            <option value="">{{ helper.getProxyColumnHint('type') }}</option>
+          </select>
+        </div>
+        <div class="col-sm-3">
+          <span class="help-block">{{ helper.getProxyColumnHint('type') }}</span>
+        </div>
+      </div>
+      <div class="form-group" show-errors>
+        <label class="col-sm-3 control-label">{{ helper.getProxyColumnString('method') }}</label>
+
+        <div class="col-sm-6">
+          <select class="form-control" name="methodType" ng-model="rule.method"
+                  ng-options="type.key as type.label for type in methods| filter:methodsFilter"
+                  required>
+            <option value="">{{ helper.getProxyColumnHint('method') }}</option>
+          </select>
+        </div>
+        <div class="col-sm-3">
+          <span class="help-block">{{ helper.getProxyColumnHint('method') }}</span>
+        </div>
+      </div>
+
+      <div ng-switch on="rule.method" ng-show="rule.type !== 'sss'">
+        <div class="form-group" ng-switch-when="password">
+          <label class="col-sm-3 control-label">{{ helper.getProxyColumnString('userName') }}</label>
+
+          <div class="col-sm-6">
+            <input class="form-control" name="userName" ng-model="$parent.rule.userName" required/>
+          </div>
+          <div class="col-sm-3">
+            <span class="help-block">{{ helper.getProxyColumnHint('userName') }}</span>
+          </div>
+        </div>
+        <div class="form-group" ng-switch-when="public-key">
+          <label class="col-sm-3 control-label">{{ helper.getProxyColumnString('privateKey') }}</label>
+
+          <div class="col-sm-6">
+            <textarea class="form-control" name="priKey" rows="6" ng-model="$parent.text" required/>
+          </div>
+          <div class="col-sm-3">
+            <span class="help-block">{{ helper.getProxyColumnHint('privateKey') }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group" show-errors>
+        <label class="col-sm-3 control-label">{{ helper.getProxyColumnString('password') }}</label>
+
+        <div class="col-sm-6">
+          <input type="password" class="form-control" name="password" ng-model="rule.password" required/>
+        </div>
+        <div class="col-sm-3">
+          <span class="help-block">{{ helper.getProxyColumnHint('password') }}</span>
+        </div>
+      </div>
+      <div class="form-group" show-errors>
+        <label class="col-sm-3 control-label">{{ helper.getProxyColumnString('tunnelServer') }}</label>
+
+        <div class="col-sm-6">
+          <input type="text" class="form-control" name="tunnelServer" placeholder="8.8.8.8"
+                 ng-model="rule.tunnelServer"/>
+        </div>
+        <div class="col-sm-3">
+          <span class="help-block">{{ helper.getProxyColumnHint('tunnelServer') }}</span>
+        </div>
+      </div>
+      <div class="form-group" show-errors>
+        <label class="col-sm-3 control-label">{{ helper.getProxyColumnString('tunnelLocalPort') }}</label>
+
+        <div class="col-sm-6">
+          <input type="number" class="form-control" name="tunnelLocalPort" placeholder="5353"
+                 ng-model="rule.tunnelLocalPort"/>
+        </div>
+        <div class="col-sm-3">
+          <span class="help-block">{{ helper.getProxyColumnHint('tunnelLocalPort') }}</span>
+        </div>
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-primary" ng-click="yes()"><em class="fa fa-check"></em> 确定</button>
+    <button class="btn btn-default" ng-click="no()"><em class="fa fa-remove"></em> 取消</button>
+  </div>
+</script>
+
+<script type="text/ng-template" id="forwardRuleEditor.html">
+  <div class="modal-header">
+    <button type="button" class="close" ng-click="no()">&times;</button>
+    <h4 class="modal-title">上网加速设置</h4>
+  </div>
+  <div class="modal-body">
+    <form name="forwardRuleForm" class="form-horizontal" role="form" novalidate>
+      <div class="form-group" show-errors>
+        <label class="col-sm-3 control-label">{{ helper.getForwardColumnString('name') }}</label>
+
+        <div class="col-sm-6">
+          <input type="text" class="form-control" name="ruleName" ng-model="rule.name"
+                 placeholder="{{ helper.getForwardColumnHint('name') }}" required/>
+        </div>
+        <div class="col-sm-3">
+          <span class="help-block">{{ helper.getForwardColumnHint('name') }}</span>
+        </div>
+      </div>
+      <div class="form-group" show-errors>
+        <label class="col-sm-3 control-label">{{ helper.getForwardColumnString('tunnelPort') }}</label>
+
+        <div class="col-sm-6">
+          <input type="number" class="form-control" name="tunnelPort" ng-model="rule.tunnelPort" required/>
+        </div>
+        <div class="col-sm-3">
+          <span class="help-block">{{ helper.getForwardColumnHint('tunnelPort') }}</span>
+        </div>
+      </div>
+      <div class="form-group" show-errors>
+        <label class="col-sm-3 control-label">{{ helper.getForwardColumnString('dnsPort') }}</label>
+
+        <div class="col-sm-6">
+          <input type="number" class="form-control" name="dnsPort" ng-model="rule.dnsPort" required/>
+        </div>
+        <div class="col-sm-3">
+          <span class="help-block">{{ helper.getForwardColumnHint('dnsPort') }}</span>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="col-sm-3 control-label">{{ helper.getForwardColumnString('text') }}</label>
+
+        <div class="col-sm-6">
+          <textarea class="form-control" name="text" rows="6" ng-model="$parent.text" required/>
+        </div>
+        <div class="col-sm-3">
+          <span class="help-block">{{ helper.getForwardColumnHint('text') }}</span>
+        </div>
+      </div>
+    </form>
+  </div>
+  <div class="modal-footer">
+    <button class="btn btn-primary" ng-click="yes()"><em class="fa fa-check"></em> 确定</button>
+    <button class="btn btn-default" ng-click="no()"><em class="fa fa-remove"></em> 取消</button>
+  </div>
+</script>
+
+</body>
+</html>
