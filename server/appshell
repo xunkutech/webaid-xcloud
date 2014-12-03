@@ -1,0 +1,160 @@
+#!/bin/sh
+set -x
+
+Parameter_num=$#
+Parameter_one=$1
+PathNow=`dirname $0` 
+PathInstall="/opt/app"
+LastValue=
+IpkName="webaid*.ipk"
+BinName="webaid"
+export PATH=/opt/app/webaid/bin:/opt/app/webaid/script:$PATH
+
+FunParamLegal()
+{
+	if [ ${Parameter_num} -ne 1 ];then
+		echo "Fail:Parameter Err."
+		exit 1
+	fi
+}
+
+Install()
+{
+	local L_ExitStatus=0
+
+	cd ${PathNow}
+	
+	if [ ! -d "${PathInstall}" ];then
+		mkdir -p ${PathInstall}
+	fi
+	
+	if [ -f ${IpkName} ];then
+		tar xzvf ${IpkName} -C ${PathInstall}
+		LastValue=$?
+		if [ ${LastValue} -eq 0 ];then
+			echo "Success."
+			L_ExitStatus=0
+		else
+			echo "Fail:Install Err."
+			L_ExitStatus=3
+		fi
+	else
+		echo "Fail:Install file is not exist."
+		L_ExitStatus=2
+	fi
+	cd -
+	exit ${L_ExitStatus}
+}
+
+unInstall()
+{
+	local L_ExitStatus=0
+
+	cd ${PathNow}/script
+	./${BinName} stop
+
+	cd ${PathNow}
+	rm  -fr ../webaid
+
+	cd -
+
+	exit ${L_ExitStatus}
+}
+
+Start()
+{
+	local L_ExitStatus=0
+	local LastValue=0
+	
+	cd ${PathNow}/script
+	
+	if [ -f ${BinName} ];then
+		chmod +x ${BinName}
+		
+		./${BinName} start
+		
+		LastValue=$?
+		if [ ${LastValue} -eq 0 ];then
+			echo "Success."
+			L_ExitStatus=0
+		else
+			echo "Fail:Start Err."
+			L_ExitStatus=4
+		fi
+		
+	else
+		echo "Fail:webaid[script file] is not exist."
+		L_ExitStatus=5
+	fi
+	
+	cd -	
+
+	exit ${L_ExitStatus}	
+}
+
+Stop()
+{
+	local L_ExitStatus=0
+	local LastValue=0
+
+	cd ${PathNow}/script
+
+	if [ -f ${BinName} ];then
+		./${BinName} stop
+
+		if [ ${LastValue} -eq 0 ];then
+			echo "Success."
+			L_ExitStatus=0
+		else
+			echo "Fail:Stop Err."
+			L_ExitStatus=4
+		fi
+	else
+		echo "Fail:webaid[script file] is not exist."
+		L_ExitStatus=5
+	fi
+	
+	exit ${L_ExitStatus}	
+}
+
+Restart()
+{
+	Stop
+	Start
+}
+
+CheckRunStatus()
+{
+	local L_ExitStatus=0
+	exit ${L_ExitStatus}	
+}
+
+Main()
+{
+	if [ "${Parameter_one}" = "install" ];then
+		Install
+	
+	elif [ "${Parameter_one}" = "uninstall" ];then
+		unInstall
+	
+	elif [ "${Parameter_one}" = "start" ];then
+		Start
+	
+	elif [ "${Parameter_one}" = "stop" ];then
+		Stop	
+	
+	elif [ "${Parameter_one}" = "restart" ];then
+		Restart
+		
+	elif [ "${Parameter_one}" = "runstatus" ];then
+		CheckRunStatus
+		
+	else
+		echo "ERR:Parameter Err."
+		exit 1	
+	fi
+}
+
+FunParamLegal
+
+Main
